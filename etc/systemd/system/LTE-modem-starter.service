@@ -1,0 +1,13 @@
+[Unit]
+Description=Run LTE modem in QMI mode
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=root
+ExecStart=/root/script/LTE-modem/start_LTE_QMI.sh
+Restart=no
+
+[Install]
+WantedBy=multi-user.target
