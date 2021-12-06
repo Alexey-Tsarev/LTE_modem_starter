@@ -118,7 +118,7 @@ proto_qmi_setup() {
 
 # 	[ -n "$modes" ] && uqmi -s -d "$device" --set-network-modes "$modes" > /dev/null 2>&1
 
-	echo "Starting network $interface"
+	echo "Starting network: '${interface}'"
 	udhcpc -n -q -f -i "${interface}"
 }
 
