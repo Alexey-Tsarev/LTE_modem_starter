@@ -1,3 +1,3 @@
 # Bus 005 Device 007: ID 413c:81d7 Dell Computer Corp. DW5821e Snapdragon X20 LTE
-ATTRS{idVendor}=="413c", ATTRS{idProduct}=="81d7", RUN+="/root/script/LTE-modem/log_device.sh '413c/81d7/318'"
+ATTRS{idVendor}=="413c", ATTRS{idProduct}=="81d7", RUN+="/root/script/LTE-modem/log_device.sh '413c:81d7'"
 ATTRS{idVendor}=="413c", ATTRS{idProduct}=="81d7", ATTRS{product}=="DW5821e Snapdragon X20 LTE", NAME="wwanlte"

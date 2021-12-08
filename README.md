@@ -8,7 +8,7 @@ I use:
 
 ## Install
 ```
-# apt install wget libqmi-utils
+# apt install wget libqmi-utils libmbim-utils udhcpc socat
 ```
 
 Download the folowing archive to a temporary directory:
@@ -27,6 +27,11 @@ LTE_modem_starter-master/etc  -> /etc
 LTE_modem_starter-master/root -> /root
 ```
 
+Reload services (you don't need to enable "LTE-modem-starter" service)
+```
+# systemctl daemon-reload
+```
+
 Reattach your LTE modem (when it connected to a USB port) or reboot your machine and look at logs:
 ```
 tail -n +1 -f /var/log/syslog
@@ -34,79 +39,109 @@ tail -n +1 -f /var/log/syslog
 
 ## Logs example
 ```
-# cat /var/log/syslog
+# journalctl -b --no-pager
 ...
-Dec  7 00:55:10 rockpi-e udev: Device: 'Dell_Inc._DW5821e_Snapdragon_X20_LTE_0123456789ABCDEF', path: '/sys/devices/platform/ff600000.usb/xhci-hcd.0.auto/usb5/5-1', config mode: '1'
-Dec  7 00:55:10 rockpi-e udev: Create file: '/var/tmp/LTE-modem-device-path.txt'
-Dec  7 00:55:10 rockpi-e udev: Run service: 'LTE-modem-starter'
+Dec 09 00:17:30 rockpi-e udev[549]: Device: 'Dell_Inc._DW5821e_Snapdragon_X20_LTE_0123456789ABCDEF', path: '/sys/devices/platform/ff600000.usb/xhci-hcd.0.auto/usb5/5-1/bConfigurationValue', current config value: '2'
+Dec 09 00:17:30 rockpi-e udev[555]: Write to file: '/var/tmp/LTE-modem-device-path.txt'
+Dec 09 00:17:30 rockpi-e udev[557]: Start service: 'LTE-modem-starter'
 ...
-Dec  7 00:55:11 rockpi-e kernel: [  132.062019] qmi_wwan 5-1:1.0 wwanlte: renamed from wwan0
+Dec 09 00:19:31 rockpi-e kernel: cdc_mbim 5-1:2.0 wwanlte: renamed from wwan0
 ...
 ```
 ```
 # journalctl -b --no-pager -u LTE-modem-starter
--- Journal begins at Tue 2021-12-07 00:22:59 +04, ends at Tue 2021-12-07 01:10:01 +04. --
-Dec 07 00:55:09 rockpi-e systemd[1]: Started Run LTE modem in QMI mode.
-Dec 07 00:55:09 rockpi-e start_LTE_QMI.sh[1305]: Attempt: 1
-Dec 07 00:55:09 rockpi-e start_LTE_QMI.sh[1305]: Device: '/sys/devices/platform/ff600000.usb/xhci-hcd.0.auto/usb5/5-1/bConfigurationValue', config mode: '2'
-Dec 07 00:55:09 rockpi-e start_LTE_QMI.sh[1305]: Setting device to use QMI: '/sys/devices/platform/ff600000.usb/xhci-hcd.0.auto/usb5/5-1/bConfigurationValue'
-Dec 07 00:55:09 rockpi-e start_LTE_QMI.sh[1305]: Finding device
-Dec 07 00:55:09 rockpi-e start_LTE_QMI.sh[1305]: Device: '/dev/cdc-wdm0'
-Dec 07 00:55:09 rockpi-e start_LTE_QMI.sh[1305]: Getting interface
-Dec 07 00:55:12 rockpi-e start_LTE_QMI.sh[1305]: Interface: 'wwanlte'
-Dec 07 00:55:12 rockpi-e start_LTE_QMI.sh[1305]: Stopping qmi-network at '/dev/cdc-wdm0'
-Dec 07 00:55:12 rockpi-e start_LTE_QMI.sh[1688]: Profile at '/etc/qmi-network.conf' not found...
-Dec 07 00:55:12 rockpi-e start_LTE_QMI.sh[1688]: Network already stopped
-Dec 07 00:55:12 rockpi-e start_LTE_QMI.sh[1688]: Clearing state at /tmp/qmi-network-state-cdc-wdm0...
-Dec 07 00:55:12 rockpi-e start_LTE_QMI.sh[1305]: Waiting for SIM initialization
-Dec 07 00:55:12 rockpi-e start_LTE_QMI.sh[1695]: [/dev/cdc-wdm0] Network started
-Dec 07 00:55:12 rockpi-e start_LTE_QMI.sh[1695]:         Packet data handle: '1654808256'
-Dec 07 00:55:12 rockpi-e start_LTE_QMI.sh[1695]: [/dev/cdc-wdm0] Client ID not released:
-Dec 07 00:55:12 rockpi-e start_LTE_QMI.sh[1695]:         Service: 'wds'
-Dec 07 00:55:12 rockpi-e start_LTE_QMI.sh[1695]:             CID: '18'
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1698]: [/dev/cdc-wdm0] Operating mode set successfully
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1305]: Starting qmi-network at '/dev/cdc-wdm0'
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1703]: Profile at '/etc/qmi-network.conf' not found...
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1703]: Checking data format with 'qmicli -d /dev/cdc-wdm0 --wda-get-data-format '...
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1703]: Device link layer protocol retrieved: raw-ip
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1703]: Getting expected data format with 'qmicli -d /dev/cdc-wdm0 --get-expected-data-format'...
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1703]: Expected link layer protocol retrieved: raw-ip
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1703]: Device and kernel link layer protocol match: raw-ip
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1703]: Starting network with 'qmicli -d /dev/cdc-wdm0 --wds-start-network=  --client-no-release-cid '...
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1703]: Saving state at /tmp/qmi-network-state-cdc-wdm0... (CID: 19)
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1703]: Saving state at /tmp/qmi-network-state-cdc-wdm0... (PDH: 1654799168)
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1703]: Network started successfully
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1727]: [/dev/cdc-wdm0] Current settings retrieved:
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1727]:            IP Family: IPv4
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1727]:         IPv4 address: 10.240.212.143
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1727]:     IPv4 subnet mask: 255.255.255.224
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1727]: IPv4 gateway address: 10.240.212.144
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1727]:     IPv4 primary DNS: 10.112.248.230
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1727]:   IPv4 secondary DNS: 10.112.248.242
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1727]:                  MTU: 1500
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1727]:              Domains: none
-Dec 07 00:55:13 rockpi-e start_LTE_QMI.sh[1305]: Waiting for network registration
-Dec 07 00:55:15 rockpi-e start_LTE_QMI.sh[1305]: Registration state: 'registered'
-Dec 07 00:55:15 rockpi-e start_LTE_QMI.sh[1305]: Starting network: 'wwanlte'
-Dec 07 00:55:15 rockpi-e start_LTE_QMI.sh[1739]: udhcpc: started, v1.30.1
-Dec 07 00:55:15 rockpi-e udhcpc[1746]: wwanlte: deconfigured
-Dec 07 00:55:15 rockpi-e start_LTE_QMI.sh[1739]: udhcpc: sending discover
-Dec 07 00:55:16 rockpi-e start_LTE_QMI.sh[1739]: udhcpc: sending select for 10.240.212.143
-Dec 07 00:55:16 rockpi-e start_LTE_QMI.sh[1739]: udhcpc: lease of 10.240.212.143 obtained, lease time 7200
-Dec 07 00:55:16 rockpi-e start_LTE_QMI.sh[1772]: /etc/resolvconf/update.d/libc: Warning: /etc/resolv.conf is not a symbolic link to /run/resolvconf/resolv.conf
-Dec 07 00:55:16 rockpi-e udhcpc[1785]: wwanlte: bound: IP=10.240.212.143/255.255.255.224 router=10.240.212.144 domain="" dns="10.112.248.230 10.112.248.242" lease=7200
-Dec 07 00:55:16 rockpi-e start_LTE_QMI.sh[1305]: Done!
-Dec 07 00:55:16 rockpi-e systemd[1]: LTE-modem-starter.service: Succeeded.
-Dec 07 00:55:16 rockpi-e systemd[1]: LTE-modem-starter.service: Consumed 1.169s CPU time.
+-- Journal begins at Thu 2021-12-09 00:10:02 +04, ends at Thu 2021-12-09 00:21:16 +04. --
+Dec 09 00:19:28 rockpi-e systemd[1]: Started Run LTE modem.
+Dec 09 00:19:29 rockpi-e start_LTE_modem.sh[1405]: Attempt: 1
+Dec 09 00:19:29 rockpi-e start_LTE_modem.sh[1405]: Device: '/sys/devices/platform/ff600000.usb/xhci-hcd.0.auto/usb5/5-1/bConfigurationValue', current config value: '2'
+Dec 09 00:19:29 rockpi-e start_LTE_modem.sh[1405]: Device config value is already set
+Dec 09 00:19:29 rockpi-e start_LTE_modem.sh[1405]: Find device
+Dec 09 00:19:29 rockpi-e start_LTE_modem.sh[1419]: find: ‘/sys/devices/platform/ff600000.usb/xhci-hcd.0.auto/usb5/5-1/*/usbmisc/*’: No such file or directory
+Dec 09 00:19:29 rockpi-e start_LTE_modem.sh[1405]: Error: 'device_only' is not found
+Dec 09 00:19:29 rockpi-e start_LTE_modem.sh[1405]: Retry
+Dec 09 00:19:30 rockpi-e start_LTE_modem.sh[1405]: Attempt: 2
+Dec 09 00:19:30 rockpi-e start_LTE_modem.sh[1405]: Device: '/sys/devices/platform/ff600000.usb/xhci-hcd.0.auto/usb5/5-1/bConfigurationValue', current config value: '2'
+Dec 09 00:19:30 rockpi-e start_LTE_modem.sh[1405]: Set device: '/sys/devices/platform/ff600000.usb/xhci-hcd.0.auto/usb5/5-1/bConfigurationValue', config value: '2'
+Dec 09 00:19:31 rockpi-e start_LTE_modem.sh[1405]: Find device
+Dec 09 00:19:31 rockpi-e start_LTE_modem.sh[1405]: Device: '/dev/cdc-wdm0'
+Dec 09 00:19:31 rockpi-e start_LTE_modem.sh[1405]: Get interface
+Dec 09 00:19:31 rockpi-e start_LTE_modem.sh[1405]: Interface: 'wwanlte'
+Dec 09 00:19:31 rockpi-e start_LTE_modem.sh[1405]: Stop mbim-network at '/dev/cdc-wdm0'
+Dec 09 00:19:31 rockpi-e start_LTE_modem.sh[1730]: Profile at '/etc/mbim-network.conf' not found...
+Dec 09 00:19:31 rockpi-e start_LTE_modem.sh[1730]: Stopping network with 'mbimcli -d /dev/cdc-wdm0 --disconnect '...
+Dec 09 00:19:32 rockpi-e start_LTE_modem.sh[1738]: error: operation failed: ContextNotActivated
+Dec 09 00:19:32 rockpi-e start_LTE_modem.sh[1730]: Network stop failed
+Dec 09 00:19:32 rockpi-e start_LTE_modem.sh[1730]: Clearing state at /tmp/mbim-network-state-cdc-wdm0...
+Dec 09 00:19:32 rockpi-e start_LTE_modem.sh[1405]: Wait for SIM initialization
+Dec 09 00:19:32 rockpi-e start_LTE_modem.sh[1405]: Start mbim-network at '/dev/cdc-wdm0'
+Dec 09 00:19:32 rockpi-e start_LTE_modem.sh[1807]: Profile at '/etc/mbim-network.conf' not found...
+Dec 09 00:19:32 rockpi-e start_LTE_modem.sh[1807]: Querying subscriber ready status 'mbimcli -d /dev/cdc-wdm0 --query-subscriber-ready-status --no-close '...
+Dec 09 00:19:32 rockpi-e start_LTE_modem.sh[1807]: [/dev/cdc-wdm0] Subscriber ready status retrieved: Ready state: 'initialized' Subscriber ID: '250027367621340' SIM ICCID: '897010273676213408FF' Ready info: 'none' Telephone numbers: (1) '+79378069192' [/dev/cdc-wdm0] Session not closed: TRID: '3'
+Dec 09 00:19:32 rockpi-e start_LTE_modem.sh[1807]: Saving state at /tmp/mbim-network-state-cdc-wdm0... (TRID: 3)
+Dec 09 00:19:32 rockpi-e start_LTE_modem.sh[1807]: Querying registration state 'mbimcli -d /dev/cdc-wdm0 --query-registration-state --no-open=3 --no-close '...
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1807]: [/dev/cdc-wdm0] Registration status: Network error: 'unknown' Register state: 'home' Register mode: 'automatic' Available data classes: 'lte' Current cellular class: 'gsm' Provider ID: '25002' Provider name: 'MegaFon' Roaming text: 'unknown' Registration flags: 'packet-service-automatic-attach' [/dev/cdc-wdm0] Session not closed: TRID: '4'
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1807]: Saving state at /tmp/mbim-network-state-cdc-wdm0... (TRID: 4)
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1807]: Attaching to packet service with 'mbimcli -d /dev/cdc-wdm0 --attach-packet-service --no-open=4 --no-close '...
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1807]: Saving state at /tmp/mbim-network-state-cdc-wdm0... (TRID: 5)
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1807]: Starting network with 'mbimcli -d /dev/cdc-wdm0 --connect=apn='' --no-open=5 --no-close '...
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1807]: Network started successfully
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1807]: Saving state at /tmp/mbim-network-state-cdc-wdm0... (TRID: 7)
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1405]: Wait for network registration
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1857]: [/dev/cdc-wdm0] Home provider:
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1857]:            Provider ID: '25002'
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1857]:          Provider name: 'MegaFon'
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1857]:                  State: 'home'
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1857]:         Cellular class: 'gsm'
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1857]:                   RSSI: '99'
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1857]:             Error rate: '99'
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1857]: [/dev/cdc-wdm0] Session not closed:
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1857]:             TRID: '1638994774'
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1405]: Start DHCP client at interface: 'wwanlte'
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1860]: udhcpc: started, v1.30.1
+Dec 09 00:19:33 rockpi-e udhcpc[1867]: wwanlte: deconfigured
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1860]: udhcpc: sending discover
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1860]: udhcpc: sending select for 100.67.233.65
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1860]: udhcpc: lease of 100.67.233.65 obtained, lease time 7200
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1893]: /etc/resolvconf/update.d/libc: Warning: /etc/resolv.conf is not a symbolic link to /run/resolvconf/resolv.conf
+Dec 09 00:19:33 rockpi-e udhcpc[1906]: wwanlte: bound: IP=100.67.233.65/255.255.255.252 router=100.67.233.66 domain="" dns="10.112.248.250 10.112.248.226" lease=7200
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1907]: 6: wwanlte: <BROADCAST,MULTICAST,NOARP,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UNKNOWN group default qlen 1000
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1907]:     link/ether fa:3e:70:9c:b9:db brd ff:ff:ff:ff:ff:ff
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1907]:     inet 100.67.233.65/30 brd 100.67.233.67 scope global wwanlte
+Dec 09 00:19:33 rockpi-e start_LTE_modem.sh[1907]:        valid_lft forever preferred_lft forever
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: AT^DEBUG?
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: RAT:LTE
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: EARFCN(DL/UL): 2850/20850
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: BAND: 7
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: BW: 20.0 MHz
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: PLMN: 250 02
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: TAC: 6420
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: eNB ID(PCI): 645413-2(21)
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: ESM CAUSE: 0
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: EMM CAUSE: -1
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: DRX: 1280ms
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: RSRP: -98.0dBm rx_diversity: 3 (-98.0dBm,-102.7dBm,-256.0dBm,-256.0dBm)
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: RSRQ: -10.6dB
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: RSSI: -67.4dBm
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: L2W:  -118
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: RI: 1
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: CQI:  10
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: RS-SNR: 2dB
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: STATUS: SRV/REGISTERED
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: SUB STATUS: NORMAL_SERVICE
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: RRC Status: IDLE
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: SVC: CS_PS
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: Tx Pwr: -
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: TMSI: 7216811954
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: IP: 100.67.233.65
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: AVG RSRP: -98.0dBm
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1909]: OK
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1913]: AT^CA_INFO?
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1913]: PCC info: Band is LTE_B7, Band_width is 20.0 MHz
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1913]: SCC1 info: Band is LTE_B7, Band_width is 20.0 MHz
+Dec 09 00:19:34 rockpi-e start_LTE_modem.sh[1913]: OK
+Dec 09 00:19:35 rockpi-e systemd[1]: LTE-modem-starter.service: Succeeded.
+Dec 09 00:19:35 rockpi-e systemd[1]: LTE-modem-starter.service: Consumed 1.084s CPU time.
 ```
-```
-# ip addr show wwanlte
-5: wwanlte: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UNKNOWN group default qlen 1000
-    link/none
-    inet 10.240.212.143/27 scope global wwanlte
-       valid_lft forever preferred_lft forever
-```
-
 ---
 Good luck!  
 Alexey Tsarev  
