@@ -1,5 +1,7 @@
 #!/bin/bash
 
+#set -x
+
 modem_setup() {
     echo "Stop ${MODE}-network at '${device}'"
     "${MODE}-network" "${device}" stop
@@ -119,32 +121,68 @@ go_to_mode() {
             echo -1 2> /dev/null > "$1"
             echo "${CONFIG_VALUE}" 2> /dev/null > "$1"
 
-            sleep 1 # need to wait the wwan0 interface renaming
+            if [ "${config_value}" = "${CONFIG_VALUE}" ]; then
+                sleep=15 # need to wait the wwan0 interface renaming
+            else
+                sleep=20 # need to wait device init (not in all cases)
+            fi
+
+            echo "Sleep: '${sleep}'"
+            sleep "${sleep}"
         else
             echo "Error: '$1' is not found"
         fi
     else
         echo "Error: first parameter - device 'bConfigurationValue' file is not provided"
-        exit 4
+        exit 2
     fi
+}
+
+run_cmd() {
+    for cmd in "$@"; do
+        echo "Run: ${cmd}"
+
+        if echo "${cmd}" | grep -q "^AT.*$"; then
+            if [ -e "${TTY_FILE}" ]; then
+                echo "${cmd}" | socat - "${TTY_FILE},echo=0,raw,crlf"
+            else
+                echo "Error: File not found: '${TTY_FILE}'"
+            fi
+        else
+            eval "${cmd}"
+        fi
+
+    done
 }
 
 cur_dir="$(dirname "$0")"
 . "${cur_dir}/config.cfg"
 
-if [ -z "${DEVICE_PATH_IN_FILE}" ]; then
-    echo "'DEVICE_PATH_IN_FILE' is not set"
-    exit 1
+# Default config
+DEVICE_PATH_IN_FILE="${DEVICE_PATH_IN_FILE:=/var/tmp/LTE-modem-device-path.txt}"
+RETRY_ATTEMPTS="${RETRY_ATTEMPTS:=10}"
+TTY_FILE="${TTY_FILE:=/dev/ttyUSB0}"
+
+if [ "${#INIT_CMD[@]}" -eq 0 ]; then
+    INIT_CMD=(
+        id
+        AT
+    )
 fi
+
+if [ "${#STATUS_CMD[@]}" -eq 0 ]; then
+    STATUS_CMD=(
+        AT^DEBUG?
+        AT^CA_INFO?
+        AT^USBTYPE?
+        AT^TEMP?
+    )
+fi
+# End Default config
 
 if [ -z "${MODE}" ]; then
     echo "'MODE' is not set. Valid values are: qmi, mbim"
-    exit 2
-fi
-
-if [ -z "${RETRY_ATTEMPTS}" ]; then
-    echo "'RETRY_ATTEMPTS' is not set"
-    exit 3
+    exit 1
 fi
 
 attempt=1
@@ -160,12 +198,14 @@ while true; do
             if [ -n "${CONFIG_VALUE}" ]; then
                 echo "Device: '${device_config_value}', current config value: '${config_value}'"
 
-                if [ "${config_value}" = "${CONFIG_VALUE}" ] && [ "${attempt}" -eq "1" ]; then
+                if [ "${config_value}" = "${CONFIG_VALUE}" ] && [ "${attempt}" -le "2" ]; then
                     echo "Device config value is already set"
                 else
                     go_to_mode "${device_config_value}"
                 fi
             fi
+
+            run_cmd "${INIT_CMD[@]}"
 
             if [ -n "${device_file}" ]; then
                 echo "Find device"
@@ -182,10 +222,7 @@ while true; do
                         echo "Interface: '${interface}'"
 
                         if modem_setup; then
-                            for at in "${STATUS_AT_CMD[@]}"; do
-                                echo "${at}" | socat - /dev/ttyUSB0,echo=0,raw,crlf
-                            done
-
+                            run_cmd "${STATUS_CMD[@]}"
                             break
                         fi
                     else

@@ -1,7 +1,7 @@
 [Unit]
 Description=Run LTE modem
-Wants=network-online.target
-After=network-online.target
+Wants=basic.target
+After=basic.target
 
 [Service]
 Type=simple

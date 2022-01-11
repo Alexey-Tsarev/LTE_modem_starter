@@ -1,0 +1,29 @@
+# 1bc7:1910 Telit Wireless Solutions Android
+# AT^CUSTOMER=0
+# ^SETMODE:0 # Ignore AT^SETMODE
+ATTRS{idVendor}=="1bc7", ATTRS{idProduct}=="1910", RUN+="/root/script/LTE-modem/log_device.sh '1bc7:1910'"
+ATTRS{idVendor}=="1bc7", ATTRS{idProduct}=="1910", ATTRS{product}=="Android", NAME="wwanlte"
+
+# 1bc7:1911 Telit Wireless Solutions Android
+# AT^CUSTOMER=0
+# ^SETMODE:1 # Ignore AT^SETMODE
+ATTRS{idVendor}=="1bc7", ATTRS{idProduct}=="1911", RUN+="/root/script/LTE-modem/log_device.sh '1bc7:1911'"
+ATTRS{idVendor}=="1bc7", ATTRS{idProduct}=="1911", ATTRS{product}=="Android", NAME="wwanlte"
+
+# 413c:81d7 Dell Computer Corp. DW5821e Snapdragon X20 LTE
+# AT^CUSTOMER=1
+# ^SETMODE:0 # Ignore AT^SETMODE
+ATTRS{idVendor}=="413c", ATTRS{idProduct}=="81d7", RUN+="/root/script/LTE-modem/log_device.sh '413c:81d7'"
+ATTRS{idVendor}=="413c", ATTRS{idProduct}=="81d7", ATTRS{product}=="DW5821e Snapdragon X20 LTE", NAME="wwanlte"
+
+# 1bc7:1910 Telit Wireless Solutions Telit LN960 Mobile Broadband
+# AT^CUSTOMER=2
+# AT^SETMODE=0
+ATTRS{idVendor}=="1bc7", ATTRS{idProduct}=="1910", RUN+="/root/script/LTE-modem/log_device.sh '1bc7:1910'"
+ATTRS{idVendor}=="1bc7", ATTRS{idProduct}=="1910", ATTRS{product}=="Telit LN960 Mobile Broadband", NAME="wwanlte"
+
+# 1bc7:1911 Telit Wireless Solutions Telit LN960 Mobile Broadband
+# AT^CUSTOMER=2
+# AT^SETMODE=1
+ATTRS{idVendor}=="1bc7", ATTRS{idProduct}=="1911", RUN+="/root/script/LTE-modem/log_device.sh '1bc7:1911'"
+ATTRS{idVendor}=="1bc7", ATTRS{idProduct}=="1911", ATTRS{product}=="Telit LN960 Mobile Broadband", NAME="wwanlte"

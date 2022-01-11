@@ -18,6 +18,8 @@ log() {
 #    } > "${tmp_file}"
 #}
 
+DEVICE_PATH_IN_FILE="${DEVICE_PATH_IN_FILE:=/var/tmp/LTE-modem-device-path.txt}"
+
 #write_debug
 
 if [ -z "$1" ]; then
